@@ -36,6 +36,6 @@
  |重构|视近期工作量决定|
  |模块根据文档结构读取|09-25|
  
- 主要功能完成与 2017-08-18 ,后期增加不同模板
+ 主要功能完成与 2017-08-18 ,后期增加不同模板，兼容性支持
                                                                    
   感谢[@Jayer](https://github.com/stuxuhai) 提供[JPinyin](https://github.com/stuxuhai/jpinyin)一个汉字转拼音的Java开源类库
