@@ -357,11 +357,9 @@ public class YbAutoUtil  extends JFrame {
                    sql.put("colComments" ,rows_list.get(i).get(j));
                 }
             }
-            row_str += sql.get("colName").toString()+" "+sql.get("type").toString()+" "+sql.get("length").toString();
-            if(i<rows_list.get(i).size()-1)
+            row_str += sql.get("colName").toString()+" "+sql.get("type").toString()+sql.get("length").toString();
+            if(i<rows_list.size()-1)
                 row_str+=",";
-            //comment on column SSHL_JLD.HLBH
-            //is '护理编号';
             com_str += "comment on column "+fileName.toUpperCase().split("\\.")[0]+"."+sql.get("colName")+"\r\n"+"is '"+sql.get("colComments")+"' ;\r\n";
             text_rows.add(row_str);
             com_rows.add(com_str);
@@ -376,11 +374,6 @@ public class YbAutoUtil  extends JFrame {
         for(int i=0; i<com_rows.size(); i++){
             text += com_rows.get(i)+"\r\n";
         }
-        //再拼接赋值
-//        text += "\r\n"+"Map<String, Object> temp = new HashMap<String, Object>();"+"\r\n";
-//        text += "temp.put(\"scPath\",\""+tableName+"\");"+"\r\n";
-//        text += "temp.put(\"data\","+tableName+");"+"\r\n";
-//        text += "result.add(temp);"+"\r\n";
         reultTextArea.setText(text);
     }
 
