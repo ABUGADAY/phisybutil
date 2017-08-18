@@ -17,9 +17,10 @@
  |不处理|type|length|name|不处理|
  
 ### 待处理
- |问题:|预计处理时间:|
- |------|------|
+ |问题|预计处理时间|
+ |------:|------:|
  |07+ 版本兼容|09-10|
+ |重构|识近期工作量决定|
  |模块根据文档结构读取|09-25|
                                                                    
   感谢[@Jayer](https://github.com/stuxuhai) 提供[JPinyin](https://github.com/stuxuhai/jpinyin)一个汉字转拼音的Java开源类库
