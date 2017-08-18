@@ -118,10 +118,10 @@ public class YbAutoUtil  extends JFrame {
                             buildMapping(rows_list);
                         }else if("3.建表sql语句".equals(fileType.getSelectedItem().toString())){
                             buildSql(rows_list);
-                        } else if("4.xml文件".equals(fileType.getSelectedItem().toString())){
-                            buildXml(rows_list);
-                        }else if("5.其他文件".equals(fileType.getSelectedItem().toString())){
-                            buildQita(rows_list);
+                        } else if("4.Js入参".equals(fileType.getSelectedItem().toString())){
+                            buildInput(rows_list);
+                        }else if("5.Js出参".equals(fileType.getSelectedItem().toString())){
+                            buildOutput(rows_list);
                         }
                     }
                 } catch (Exception e1) {
@@ -377,8 +377,8 @@ public class YbAutoUtil  extends JFrame {
         reultTextArea.setText(text);
     }
 
-    //生成对应的xml文件
-    public  void buildXml(java.util.List<java.util.List<String>> rows_list) {
+    //生成对应的Js入参
+    public  void buildInput(java.util.List<java.util.List<String>> rows_list) {
         java.util.List<String> text_rows = new ArrayList<String>();
         for(int i=0; i<rows_list.size(); i++){			//每一行
             String  xmlText ="";
@@ -410,7 +410,7 @@ public class YbAutoUtil  extends JFrame {
         reultTextArea.setText(text);
     }
     //生成对应的指定其他文件
-    public  void buildQita(java.util.List<java.util.List<String>> rows_list) {
+    public  void buildOutput(java.util.List<java.util.List<String>> rows_list) {
         reultTextArea.setText(readerLocalTXT().toUpperCase());
     }
 
