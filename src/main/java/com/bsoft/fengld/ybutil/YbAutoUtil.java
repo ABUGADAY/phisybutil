@@ -329,41 +329,58 @@ public class YbAutoUtil  extends JFrame {
     }
 
     //生成对应的sql建表语句
-    public  void buildSql(java.util.List<java.util.List<String>> rows_list) {
+    public  void buildSql(java.util.List<java.util.List<String>> rows_list) throws PinyinException {
         String tableName = "";
+        Map<String,Object> sql = new HashMap<String,Object>();
         java.util.List<String> text_rows = new ArrayList<String>();
+        java.util.List<String> com_rows = new ArrayList<String>();
         for(int i=0; i<rows_list.size(); i++){			//每一行
             String  row_str ="";
+            String com_str = "";
             for(int j=0; j<rows_list.get(i).size(); j++){			//每一列（每个单元格）
-                if(j == 0){  //his业务表名
-                    if(i ==0){
-                        tableName = rows_list.get(i).get(j);
+                if(j == 0){  //参数名
+                    //暂不处理
+                }else if(j == 1){  	//字段类型
+                    String type = rows_list.get(i).get(j).trim();
+//                        System.out.println(type);
+                    if(type.toLowerCase().equals("varchar2") || type.toLowerCase().equals("string")){
+                        sql.put("type","VARCHAR2(") ;
+                    }else if(type.toLowerCase().equals("number")){
+                        sql.put("type","NUMBER(") ;
+                    }else{
+                        sql.put("type",type.toLowerCase()+"(") ;
                     }
-                    row_str += rows_list.get(i).get(j)+".put(\"";
-                }else if(j == 1){  	//his业务字段
-                    row_str += rows_list.get(i).get(j)+"\", ";
-                }else if(j == 2){		//下载功能号
-                    row_str += "((Map<String, Object>)"+rows_list.get(i).get(j)+".get(\"";
-                }else if(j == 3){		//下载功能号中对应节点
-                    row_str += rows_list.get(i).get(j)+"\")).get(\"";
-                }else if(j == 4){		//下载功能号中对应字段
-                    row_str += rows_list.get(i).get(j)+"\"));		";
-                }else if(j == 5){		//his字段说明
-                    row_str += "//"+rows_list.get(i).get(j);
+                }else if(j == 2){		//长度
+                    sql.put("length",rows_list.get(i).get(j).split("\\.")[0].toString().trim()+")");
+                }else if(j == 3){		//字段名
+                   sql.put("colName" , PinyinHelper.getShortPinyin(rows_list.get(i).get(j)).toUpperCase());
+                   sql.put("colComments" ,rows_list.get(i).get(j));
                 }
             }
+            row_str += sql.get("colName").toString()+" "+sql.get("type").toString()+" "+sql.get("length").toString();
+            if(i<rows_list.get(i).size()-1)
+                row_str+=",";
+            //comment on column SSHL_JLD.HLBH
+            //is '护理编号';
+            com_str += "comment on column "+fileName.toUpperCase().split("\\.")[0]+"."+sql.get("colName")+"\r\n"+"is '"+sql.get("colComments")+"' ;\r\n";
             text_rows.add(row_str);
+            com_rows.add(com_str);
         }
         reultTextArea.setText("");
-        String text ="Map<String, Object> "+tableName+" = new HashMap<String, Object>();"+"\r\n"+"\r\n";
+        String text ="--create table with given colname you'd better add index and key by yourself\r\n--只生成列，主键等自己加\r\n"
+                +"create table  "+fileName.toUpperCase().split("\\.")[0]+"\r\n"+"("+"\r\n";
         for(int i=0; i<text_rows.size(); i++){
             text += text_rows.get(i)+"\r\n";
         }
+        text+=")\r\n;\r\n--Add comments to the columns \r\n";
+        for(int i=0; i<com_rows.size(); i++){
+            text += com_rows.get(i)+"\r\n";
+        }
         //再拼接赋值
-        text += "\r\n"+"Map<String, Object> temp = new HashMap<String, Object>();"+"\r\n";
-        text += "temp.put(\"scPath\",\""+tableName+"\");"+"\r\n";
-        text += "temp.put(\"data\","+tableName+");"+"\r\n";
-        text += "result.add(temp);"+"\r\n";
+//        text += "\r\n"+"Map<String, Object> temp = new HashMap<String, Object>();"+"\r\n";
+//        text += "temp.put(\"scPath\",\""+tableName+"\");"+"\r\n";
+//        text += "temp.put(\"data\","+tableName+");"+"\r\n";
+//        text += "result.add(temp);"+"\r\n";
         reultTextArea.setText(text);
     }
 
