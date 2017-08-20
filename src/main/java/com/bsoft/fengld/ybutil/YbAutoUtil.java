@@ -225,7 +225,6 @@ public class YbAutoUtil extends JFrame {
 
     //生成对应的sql建表语句
     public void buildSql(java.util.List<java.util.List<String>> rows_list) throws PinyinException {
-        String tableName = "";
         Map<String, Object> sql = new HashMap<String, Object>();
         java.util.List<String> text_rows = new ArrayList<String>();
         java.util.List<String> com_rows = new ArrayList<String>();
@@ -293,8 +292,6 @@ public class YbAutoUtil extends JFrame {
     //Js出参
     public void buildOutput(java.util.List<java.util.List<String>> rows_list) throws PinyinException {
         java.util.List<String> text_rows = new ArrayList<String>();
-        String json_str = "";
-        Map<String, Object> json = new HashMap<String, Object>();
         ArrayList<Map<String , Object>>con_list = ExcelFileReader.getExcelContent(rows_list);
         Iterator<Map<String , Object>>it = con_list.iterator();
         while(it.hasNext()){
