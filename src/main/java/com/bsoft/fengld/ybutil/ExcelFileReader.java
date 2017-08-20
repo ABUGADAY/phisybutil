@@ -12,8 +12,6 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by Fengld on 2017/8/20.
@@ -25,6 +23,31 @@ public class ExcelFileReader {
     private static final int length_index = ExcelFile.getLength_index();
     private static final int alias_index = ExcelFile.getAlias_index();
     private static final int remark_index = ExcelFile.getRemark_index();
+    private static final int name_index4Js = ExcelFile.getName_index4Js();
+
+    public static int getName_index() {
+        return name_index;
+    }
+
+    public static int getType_index() {
+        return type_index;
+    }
+
+    public static int getLength_index() {
+        return length_index;
+    }
+
+    public static int getAlias_index() {
+        return alias_index;
+    }
+
+    public static int getRemark_index() {
+        return remark_index;
+    }
+
+    public static int getName_index4Js() {
+        return name_index4Js;
+    }
 
     public static boolean readerExcel(String path, java.util.List<java.util.List<String>> rows_list) throws Exception {
         File file = new File(path);
@@ -47,7 +70,6 @@ public class ExcelFileReader {
             HSSFRow row;
             row = sheet.getRow(i);
             for (int j = 0; j < columnNum; j++) {
-                //System.out.println(i+"  "+j);
                 row_list.add(row.getCell(j).toString());
             }
             rows_list.add(row_list);
@@ -81,6 +103,8 @@ public class ExcelFileReader {
                     content_map.put("alias" , rows_list.get(i).get(alias_index));
                 if(j == remark_index)
                     content_map.put("remark" , rows_list.get(i).get(remark_index));
+                if(j == name_index4Js)
+                    content_map.put("name4Js" , rows_list.get(i).get(name_index4Js));
             }
             content_list.add(content_map);
         }

@@ -6,11 +6,14 @@ package com.bsoft.fengld.ybutil;
  */
 public class ExcelFile
 {
-    private static int name_index = 3;
+    private static int name_index4Js = 0;
     private static int type_index = 1;
     private static int length_index = 2;
     private static int alias_index = 3;
-    private static int remark_index = 4;
+    private static int remark_index = 3;
+    private static int name_index = alias_index;
+
+
 
     /**
      * 先以默认配置为准，以后加上界面选择序号
@@ -57,6 +60,12 @@ public class ExcelFile
         ExcelFile.remark_index = remark_index;
     }
 
+    public static int getName_index4Js() {
+        return name_index4Js;
+    }
 
+    public static void setName_index4Js(int name_index4self) {
+        ExcelFile.name_index4Js = name_index4self;
+    }
 
 }

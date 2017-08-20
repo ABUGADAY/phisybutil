@@ -2,10 +2,6 @@ package com.bsoft.fengld.ybutil;
 
 import com.github.stuxuhai.jpinyin.PinyinException;
 import com.github.stuxuhai.jpinyin.PinyinHelper;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -13,9 +9,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -109,7 +105,7 @@ public class YbAutoUtil extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 java.util.List<java.util.List<String>> rows_list = new ArrayList<java.util.List<String>>();
                 try {
-                    if (readerExcel(pathTextField.getText(), rows_list)) {
+                    if (ExcelFileReader.readerExcel(pathTextField.getText(), rows_list)) {
                         if ("1.schema文件".equals(fileType.getSelectedItem().toString())) {
                             buildSchema(rows_list);
                         } else if ("2.mapping文件".equals(fileType.getSelectedItem().toString())) {
@@ -163,38 +159,18 @@ public class YbAutoUtil extends JFrame {
     //生成schema文件
     public void buildSchema(java.util.List<java.util.List<String>> rows_list) throws PinyinException {
         java.util.List<String> text_rows = new ArrayList<String>();
-        for (int i = 0; i < rows_list.size(); i++) {            //每一行
-            String row_str = "<item ";
-            Map<String, Object> schema = new HashMap<String, Object>();
-            for (int j = 0; j < rows_list.get(i).size(); j++) {            //每一列（每个单元格）
-                if (j == 3 && !(rows_list.get(i).get(j) == null)) {  //字段名
-                    String colName = rows_list.get(i).get(j);
-                    schema.put("id", " id=\"" + PinyinHelper.getShortPinyin(colName).toUpperCase() + "\"   ");
-
-                    //说明文字
-                    schema.put("alias", "alias=\"" + rows_list.get(i).get(j) + "\"   ");
-                } else if (j == 1) {        //字段类型
-                    String str = "";
-                    if (rows_list.get(i).get(j).indexOf("(") != -1) {
-                        String type = rows_list.get(i).get(j).split("[(]")[0];
-                        String length = rows_list.get(i).get(j).split("[(]")[1].split("[)]")[0];
-                        if (type.toLowerCase().equals("varchar2")) {
-                            str = " type=\"string\"   length=\"" + length + "\" ";
-                        } else if (type.toLowerCase().equals("number")) {
-                            str = " type=\"long\"   length=\"" + length + "\" ";
-                        } else {
-                            str = " type=\"" + type.toLowerCase() + "\"    length=\"" + length + "\" ";
-                        }
-                        schema.put("type", str);
-                    } else {
-                        schema.put("type", " type=\"" + rows_list.get(i).get(j).toLowerCase() + "\" ");
-                    }
-                } else if (j == 2) {//字段长度
-                    schema.put("length", " length=\"" + rows_list.get(i).get(j).split("\\.")[0] + "\"   ");
-                }
+        ArrayList<Map<String , Object>>con_list = ExcelFileReader.getExcelContent(rows_list);
+        Iterator<Map<String , Object>>it = con_list.iterator();
+        while(it.hasNext()){
+            String str = "<item ";
+            Map<String , Object>con_map = it.next();
+            for(Map.Entry<String ,Object> entry : con_map.entrySet()){
+                if(entry.getKey().equals("remark")||entry.getKey().equals("name4Js"))
+                    continue;
+                str += " " +entry.getKey()+"=\""+entry.getValue()+"\"";
             }
-            row_str += schema.get("id").toString() + schema.get("type").toString() + schema.get("length").toString() + schema.get("alias").toString() + " />";
-            text_rows.add(row_str);
+            str += " />";
+            text_rows.add(str);
         }
         reultTextArea.setText("");
         String text = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" + "" +
@@ -209,30 +185,29 @@ public class YbAutoUtil extends JFrame {
     //生成mapping文件
     public void buildMapping(java.util.List<java.util.List<String>> rows_list) throws PinyinException {
         java.util.List<String> text_rows = new ArrayList<String>();
-        for (int i = 0; i < rows_list.size(); i++) {            //每一行
-            Map<String, Object> mapping = new HashMap<String, Object>();
-            String row_str = "<property ";
-            for (int j = 0; j < rows_list.get(i).size(); j++) {            //每一列（每个单元格）
-                if (j == 3) {  //字段名
-                    String colName = rows_list.get(i).get(j);
-                    mapping.put("name", "name=" + PinyinHelper.getShortPinyin(colName).toUpperCase() + "\"   ");
-                } else if (j == 1) {        //字段类型
-                    String type = rows_list.get(i).get(j).trim();
-//                        System.out.println(type);
-                    if (type.toLowerCase().equals("varchar2") || type.toLowerCase().equals("string")) {
-                        mapping.put("type", "type=\"java.lang.String\" ");
-                    } else if (type.toLowerCase().equals("number")) {
-                        mapping.put("type", "type=\"java.lang.Long\" ");
-                    } else {
-                        mapping.put("type", "type=\"" + type.toLowerCase() + "\"  ");
-                    }
-                } else if (j == 2) {
-                    String length = rows_list.get(i).get(j).split("\\.")[0].toString();//整数位
-                    mapping.put("length", "  length=\"" + length + "\"  ");
+        ArrayList<Map<String , Object>>con_list = ExcelFileReader.getExcelContent(rows_list);
+        Iterator<Map<String , Object>>it = con_list.iterator();
+        while(it.hasNext()) {
+            String str = "<property ";
+            Map<String, Object> con_map = it.next();
+            for (Map.Entry<String, Object> entry : con_map.entrySet()) {
+                if(entry.getKey().equals("remark")||entry.getKey().equals("alias"))
+                    continue;
+                else if (entry.getKey().equals("type")) {
+                    String type = "";
+                    if (entry.getValue().toString().toLowerCase().equals("varchar2") || entry.getValue().toString().toLowerCase().equals("string"))
+                        type = "type = java.lang.String ";
+                    else if (entry.getValue().toString().toLowerCase().equals("number") || entry.getValue().toString().toLowerCase().equals("int") || entry.getValue().toString().toLowerCase().equals("long"))
+                        type = "type = java.lang.Long ";
+                    else
+                        type = "type= " + type.toLowerCase();
+                    str += type;
                 }
+                else
+                    str += " " +entry.getKey()+"=\""+entry.getValue()+"\" ";
             }
-            row_str += mapping.get("name").toString() + mapping.get("type").toString() + mapping.get("length").toString() + "/>";
-            text_rows.add(row_str);
+            str +="/>";
+            text_rows.add(str);
         }
         reultTextArea.setText("");
         String text = "<?xml version=\"1.0\"?>\r\n" +
@@ -248,87 +223,6 @@ public class YbAutoUtil extends JFrame {
         reultTextArea.setText(text);
     }
 
-    public boolean readerExcel(String path, java.util.List<java.util.List<String>> rows_list) throws Exception {
-        File file = new File(path);
-        if (!file.exists()) {
-            return false;
-        }
-        FileInputStream fint = new FileInputStream(file);
-        POIFSFileSystem poiFileSystem = new POIFSFileSystem(fint);
-        HSSFWorkbook workbook = new HSSFWorkbook(poiFileSystem);
-        //获取第一张Sheet表
-        HSSFSheet sheet = workbook.getSheetAt(0);
-
-        //我们既可能通过Sheet的名称来访问它，也可以通过下标来访问它。如果通过下标来访问的话，要注意的一点是下标从0开始，就像数组一样。
-        //获取第一列数据(字段名)
-        /**
-         * FileInputStream inp = new FileInputStream("E:\\WEIAN.xls");
-         HSSFWorkbook wb = new HSSFWorkbook(inp);
-         HSSFSheet sheet = wb.getSheetAt(2); // 获得第三个工作薄(2008工作薄)
-         // 填充上面的表格,数据需要从数据库查询
-         HSSFRow row5 = sheet.getRow(4); // 获得工作薄的第五行
-         HSSFCell cell54 = row5.getCell(3);// 获得第五行的第四个单元格
-         cell54.setCellValue("测试纳税人名称");// 给单元格赋值
-         //获得总列数
-         int coloumNum=sheet.getRow(0).getPhysicalNumberOfCells();
-         int rowNum=sheet.getLastRowNum();//获得总行数
-         */
-        int rowNum = sheet.getLastRowNum();//获得总行数
-        //获取总列数
-        int columnNum = sheet.getRow(0).getPhysicalNumberOfCells();
-        for (int i = 0; i <= rowNum; i++) {
-            java.util.List<String> row_list = new ArrayList<String>();
-            HSSFRow row;
-            row = sheet.getRow(i);
-            for (int j = 0; j < columnNum; j++) {
-                //System.out.println(i+"  "+j);
-                row_list.add(row.getCell(j).toString());
-            }
-            rows_list.add(row_list);
-        }
-        fint.close();
-        return true;
-    }
-
-    //生成对应的赋值语句
-    public void buildEvaluate(java.util.List<java.util.List<String>> rows_list) {
-        String tableName = "";
-        java.util.List<String> text_rows = new ArrayList<String>();
-        for (int i = 0; i < rows_list.size(); i++) {            //每一行
-            String row_str = "";
-            for (int j = 0; j < rows_list.get(i).size(); j++) {            //每一列（每个单元格）
-                if (j == 0) {  //his业务表名
-                    if (i == 0) {
-                        tableName = rows_list.get(i).get(j);
-                    }
-                    row_str += rows_list.get(i).get(j) + ".put(\"";
-                } else if (j == 1) {    //his业务字段
-                    row_str += rows_list.get(i).get(j) + "\", ";
-                } else if (j == 2) {        //下载功能号
-                    row_str += "((Map<String, Object>)" + rows_list.get(i).get(j) + ".get(\"";
-                } else if (j == 3) {        //下载功能号中对应节点
-                    row_str += rows_list.get(i).get(j) + "\")).get(\"";
-                } else if (j == 4) {        //下载功能号中对应字段
-                    row_str += rows_list.get(i).get(j) + "\"));		";
-                } else if (j == 5) {        //his字段说明
-                    row_str += "//" + rows_list.get(i).get(j);
-                }
-            }
-            text_rows.add(row_str);
-        }
-        reultTextArea.setText("");
-        String text = "Map<String, Object> " + tableName + " = new HashMap<String, Object>();" + "\r\n" + "\r\n";
-        for (int i = 0; i < text_rows.size(); i++) {
-            text += text_rows.get(i) + "\r\n";
-        }
-        //再拼接赋值
-        text += "\r\n" + "Map<String, Object> temp = new HashMap<String, Object>();" + "\r\n";
-        text += "temp.put(\"scPath\",\"" + tableName + "\");" + "\r\n";
-        text += "temp.put(\"data\"," + tableName + ");" + "\r\n";
-        text += "result.add(temp);" + "\r\n";
-        reultTextArea.setText(text);
-    }
-
     //生成对应的sql建表语句
     public void buildSql(java.util.List<java.util.List<String>> rows_list) throws PinyinException {
         String tableName = "";
@@ -341,7 +235,7 @@ public class YbAutoUtil extends JFrame {
             for (int j = 0; j < rows_list.get(i).size(); j++) {            //每一列（每个单元格）
                 if (j == 0) {  //参数名
                     //暂不处理
-                } else if (j == 1) {    //字段类型
+                } else if (j == ExcelFileReader.getType_index()) {    //字段类型
                     String type = rows_list.get(i).get(j).trim();
 //                        System.out.println(type);
                     if (type.toLowerCase().equals("varchar2") || type.toLowerCase().equals("string")) {
@@ -351,9 +245,9 @@ public class YbAutoUtil extends JFrame {
                     } else {
                         sql.put("type", type.toLowerCase() + "(");
                     }
-                } else if (j == 2) {        //长度
+                } else if (j == ExcelFileReader.getLength_index()) {        //长度
                     sql.put("length", rows_list.get(i).get(j).split("\\.")[0].toString().trim() + ")");
-                } else if (j == 3) {        //字段名
+                } else if (j == ExcelFileReader.getName_index()) {        //字段名
                     sql.put("colName", PinyinHelper.getShortPinyin(rows_list.get(i).get(j)).toUpperCase());
                     sql.put("colComments", rows_list.get(i).get(j));
                 }
@@ -381,24 +275,13 @@ public class YbAutoUtil extends JFrame {
     //生成对应的Js入参
     public void buildInput(java.util.List<java.util.List<String>> rows_list) throws PinyinException {
         java.util.List<String> text_rows = new ArrayList<String>();
-        String json_str = "";
-        Map<String, Object> json = new HashMap<String, Object>();
-        for (int i = 0; i < rows_list.size(); i++) {            //每一行
-            String row_str = "";
-            for (int j = 0; j < rows_list.get(i).size(); j++) { //每一列（每个单元格）
-                if (j == 0) {  //参数名
-                    json.put("name",rows_list.get(i).get(j).trim());
-                } else if (j == 1) {    //字段类型
-                    //不处理
-                } else if (j == 2) {        //长度
-                    //不处理
-                } else if (j == 3) {        //字段名
-//                    json.put("remark", PinyinHelper.getShortPinyin(rows_list.get(i).get(j)).toUpperCase());
-                    json.put("remark", rows_list.get(i).get(j));
-                }
-            }
-            row_str+="request."+json.get("name").toString()+"=   ;//"+json.get("remark").toString()+"\r\n";
-            text_rows.add(row_str);
+        ArrayList<Map<String , Object>>con_list = ExcelFileReader.getExcelContent(rows_list);
+        Iterator<Map<String , Object>>it = con_list.iterator();
+        while(it.hasNext()){
+            String str = "request.";
+            Map<String , Object>con_map = it.next();
+            str += con_map.get("name4Js").toString()+"=   ;//"+(con_map.containsKey("remark")?con_map.get("remark").toString():"")+"\r\n";
+            text_rows.add(str);
         }
         reultTextArea.setText("");
         String text="var request = {}\r\n";
@@ -412,22 +295,13 @@ public class YbAutoUtil extends JFrame {
         java.util.List<String> text_rows = new ArrayList<String>();
         String json_str = "";
         Map<String, Object> json = new HashMap<String, Object>();
-        for (int i = 0; i < rows_list.size(); i++) {            //每一行
-            String row_str = "";
-            for (int j = 0; j < rows_list.get(i).size(); j++) { //每一列（每个单元格）
-                if (j == 0) {  //参数名
-                    json.put("name",rows_list.get(i).get(j).trim());
-                } else if (j == 1) {    //字段类型
-                    //不处理
-                } else if (j == 2) {        //长度
-                    //不处理
-                } else if (j == 3) {        //字段名
-                    json.put("colName", PinyinHelper.getShortPinyin(rows_list.get(i).get(j)).toUpperCase());
-                    json.put("remark", rows_list.get(i).get(j));
-                }
-            }
-            row_str+="this.XXXX[\""+json.get("colName").toString()+"\"]= "+"ret."+json.get("name").toString()+" //"+json.get("remark").toString()+"\r\n";
-            text_rows.add(row_str);
+        ArrayList<Map<String , Object>>con_list = ExcelFileReader.getExcelContent(rows_list);
+        Iterator<Map<String , Object>>it = con_list.iterator();
+        while(it.hasNext()){
+            String str = "this.XXXX[\"";
+            Map<String , Object>con_map = it.next();
+            str += PinyinHelper.getShortPinyin(con_map.get("alias").toString()).toUpperCase()+"\"]= "+"ret."+con_map.get("name4Js")+" //"+(con_map.containsKey("remark")?con_map.get("remark").toString():"")+"\r\n";
+            text_rows.add(str);
         }
         reultTextArea.setText("");
         String text="var ret = //调用方法返回数据\r\nto-do//异常处理的实现\r\n";
@@ -435,38 +309,5 @@ public class YbAutoUtil extends JFrame {
             text += text_rows.get(i);
         reultTextArea.setText(text);
     }
-
-//    public String readerLocalTXT() {
-//        Long now = new Date().getTime();
-//        // 读取txt内容为字符串
-//        StringBuffer txtContent = new StringBuffer();
-//        // 每次读取的byte数
-//        char[] chs = new char[1024];
-//        String src = "C:/Users/Administrator/Desktop/new" + now + ".txt";
-//        String str = "";
-//        String line = "";
-//        FileInputStream fis = null;
-//        InputStreamReader isr = null;
-//        BufferedReader br = null;
-//        try {
-//            fis = new FileInputStream(new File(src));
-//            isr = new InputStreamReader(fis, "utf-8");
-//            br = new BufferedReader(isr);
-//            while ((line = br.readLine()) != null) {
-//                line += "\r\n";
-//                str = str + line;
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//            try {
-//                fis.close();
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        return str;
-//    }
-
 
 }
