@@ -40,7 +40,7 @@
  Tip：重构时将类抽取出来
  
  
- [2017-08-20]Add: 新增加配置文件ExcelFile，在该文件中设置你要取的字段类型的下标[0 , length-1]
+ [2017-08-20]Add: 新增加配置文件ExcelFile，在该文件中设置你要取的字段类型的下标[0 , length-1]  
  [2017-08-20]Tip: SQL方法待优化
                                                                    
   感谢[@Jayer](https://github.com/stuxuhai) 提供[JPinyin](https://github.com/stuxuhai/jpinyin)一个汉字转拼音的Java开源类库
