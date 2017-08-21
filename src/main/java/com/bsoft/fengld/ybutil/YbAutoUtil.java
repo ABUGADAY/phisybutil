@@ -169,6 +169,8 @@ public class YbAutoUtil extends JFrame {
                     continue;
                 str += " " +entry.getKey()+"=\""+entry.getValue()+"\"";
             }
+            if(!con_map.containsKey("type"))
+                str += " type = \"String\"";
             str += " />";
             text_rows.add(str);
         }
@@ -190,17 +192,23 @@ public class YbAutoUtil extends JFrame {
         while(it.hasNext()) {
             String str = "<property ";
             Map<String, Object> con_map = it.next();
+            boolean flag = true ;
             for (Map.Entry<String, Object> entry : con_map.entrySet()) {
-                if(entry.getKey().equals("remark")||entry.getKey().equals("alias"))
+                String type = "";
+                if(!con_map.containsKey("type") && flag) {
+                    type = "type = \"java.lang.String\" ";
+                    str += type;
+                    flag = false ;
+                }
+                if(entry.getKey().equals("remark")||entry.getKey().equals("alias")||entry.getKey().equals("name4Js"))
                     continue;
                 else if (entry.getKey().equals("type")) {
-                    String type = "";
                     if (entry.getValue().toString().toLowerCase().equals("varchar2") || entry.getValue().toString().toLowerCase().equals("string"))
-                        type = "type = java.lang.String ";
+                        type = "type = \"java.lang.String\" ";
                     else if (entry.getValue().toString().toLowerCase().equals("number") || entry.getValue().toString().toLowerCase().equals("int") || entry.getValue().toString().toLowerCase().equals("long"))
-                        type = "type = java.lang.Long ";
+                        type = "type = \"java.lang.Long\" ";
                     else
-                        type = "type= " + type.toLowerCase();
+                        type = "type= \"" + type.toLowerCase()+"\" ";
                     str += type;
                 }
                 else
@@ -241,6 +249,8 @@ public class YbAutoUtil extends JFrame {
                         sql.put("type", "VARCHAR2(");
                     } else if (type.toLowerCase().equals("number")) {
                         sql.put("type", "NUMBER(");
+                    } else if(type == null){
+                        sql.put("type", "VARCHAR2(");
                     } else {
                         sql.put("type", type.toLowerCase() + "(");
                     }
