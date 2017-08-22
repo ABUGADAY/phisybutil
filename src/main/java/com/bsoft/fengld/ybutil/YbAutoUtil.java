@@ -262,6 +262,7 @@ public class YbAutoUtil extends JFrame {
                 }
             }
             row_str += sql.get("colName").toString() + " " + sql.get("type").toString() + sql.get("length").toString();
+//              row_str += "alter table "+fileName.toUpperCase().split("\\.")[0]+" add "+sql.get("colName").toString() + " " + sql.get("type").toString() + sql.get("length").toString();
             if (i < rows_list.size() - 1)
                 row_str += ",";
             com_str += "comment on column " + fileName.toUpperCase().split("\\.")[0] + "." + sql.get("colName") + "\r\n" + "is '" + sql.get("colComments") + "' ;\r\n";
@@ -274,6 +275,10 @@ public class YbAutoUtil extends JFrame {
         for (int i = 0; i < text_rows.size(); i++) {
             text += text_rows.get(i) + "\r\n";
         }
+//        String text = "";
+//        for (int i = 0; i < text_rows.size(); i++) {
+//            text += text_rows.get(i) + "\r\n";
+//        }
         text += ")\r\n;\r\n--Add comments to the columns \r\n";
         for (int i = 0; i < com_rows.size(); i++) {
             text += com_rows.get(i) + "\r\n";
