@@ -9,10 +9,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Fengld on 2017/8/17.
@@ -29,7 +26,7 @@ public class YbAutoUtil extends JFrame {
     //出参文本框
     private static JTextArea reultTextArea = null;
     //
-    private static String[] fileTypeEnum = {"1.schema文件", "2.mapping文件", "3.建表sql语句", "4.Js入参", "5.Js出参"};
+    private static String[] fileTypeEnum = {"1.schema文件", "2.mapping文件", "3.建表sql语句", "4.Js入参", "5.Js出参" };
 
     public YbAutoUtil() {
         JFrame utilFrame = new JFrame();
@@ -152,9 +149,12 @@ public class YbAutoUtil extends JFrame {
         utilFrame.setVisible(true);
     }
 
+
+
     public static void main(String[] args) {
         new YbAutoUtil();
     }
+
 
     //生成schema文件
     public void buildSchema(java.util.List<java.util.List<String>> rows_list) throws PinyinException {
@@ -162,12 +162,15 @@ public class YbAutoUtil extends JFrame {
         ArrayList<Map<String , Object>>con_list = ExcelFileReader.getExcelContent(rows_list);
         Iterator<Map<String , Object>>it = con_list.iterator();
         while(it.hasNext()){
-            String str = "<item ";
+            String str = "<item";
             Map<String , Object>con_map = it.next();
             for(Map.Entry<String ,Object> entry : con_map.entrySet()){
                 if(entry.getKey().equals("remark")||entry.getKey().equals("name4Js"))
                     continue;
-                str += " " +entry.getKey()+"=\""+entry.getValue()+"\"";
+                if(entry.getKey().equals("name"))
+                    str += " id=\""+entry.getValue()+"\"";
+                else
+                    str += " " +entry.getKey()+"=\""+entry.getValue()+"\"";
             }
             if(!con_map.containsKey("type"))
                 str += " type = \"String\"";
@@ -236,52 +239,17 @@ public class YbAutoUtil extends JFrame {
         Map<String, Object> sql = new HashMap<String, Object>();
         java.util.List<String> text_rows = new ArrayList<String>();
         java.util.List<String> com_rows = new ArrayList<String>();
-        for (int i = 0; i < rows_list.size(); i++) {            //每一行
-            String row_str = "";
-            String com_str = "";
-            for (int j = 0; j < rows_list.get(i).size(); j++) {            //每一列（每个单元格）
-                if (j == 0) {  //参数名
-                    //暂不处理
-                } else if (j == ExcelFileReader.getType_index()) {    //字段类型
-                    String type = rows_list.get(i).get(j).trim();
-//                        System.out.println(type);
-                    if (type.toLowerCase().equals("varchar2") || type.toLowerCase().equals("string")) {
-                        sql.put("type", "VARCHAR2(");
-                    } else if (type.toLowerCase().equals("number")) {
-                        sql.put("type", "NUMBER(");
-                    } else if(type == null){
-                        sql.put("type", "VARCHAR2(");
-                    } else {
-                        sql.put("type", type.toLowerCase() + "(");
-                    }
-                } else if (j == ExcelFileReader.getLength_index()) {        //长度
-                    sql.put("length", rows_list.get(i).get(j).split("\\.")[0].toString().trim() + ")");
-                } else if (j == ExcelFileReader.getName_index()) {        //字段名
-                    sql.put("colName", PinyinHelper.getShortPinyin(rows_list.get(i).get(j)).toUpperCase());
-                    sql.put("colComments", rows_list.get(i).get(j));
-                }
-            }
-            row_str += sql.get("colName").toString() + " " + sql.get("type").toString() + sql.get("length").toString();
-//              row_str += "alter table "+fileName.toUpperCase().split("\\.")[0]+" add "+sql.get("colName").toString() + " " + sql.get("type").toString() + sql.get("length").toString();
-            if (i < rows_list.size() - 1)
-                row_str += ",";
-            com_str += "comment on column " + fileName.toUpperCase().split("\\.")[0] + "." + sql.get("colName") + "\r\n" + "is '" + sql.get("colComments") + "' ;\r\n";
-            text_rows.add(row_str);
-            com_rows.add(com_str);
+        ArrayList<Map<String , Object>>con_list = ExcelFileReader.getExcelContent(rows_list);
+        Iterator<Map<String , Object>>it = con_list.iterator();
+        while(it.hasNext()){
+            Map<String , Object>con_map = it.next();
+            String str = "insert into "+fileName.toUpperCase().split("\\.")[0]+" （YBKSBM , YBKSMC) values('"+con_map.get("name4Js").toString().split("\\.")[0]+"' , '"+con_map.get("alias").toString()+"') ;";
+            text_rows.add(str);
         }
         reultTextArea.setText("");
-        String text = "--create table with given colname you'd better add index and key by yourself\r\n--只生成列，主键等自己加\r\n"
-                + "create table  " + fileName.toUpperCase().split("\\.")[0] + "\r\n" + "(" + "\r\n";
+        String text ="";
         for (int i = 0; i < text_rows.size(); i++) {
             text += text_rows.get(i) + "\r\n";
-        }
-//        String text = "";
-//        for (int i = 0; i < text_rows.size(); i++) {
-//            text += text_rows.get(i) + "\r\n";
-//        }
-        text += ")\r\n;\r\n--Add comments to the columns \r\n";
-        for (int i = 0; i < com_rows.size(); i++) {
-            text += com_rows.get(i) + "\r\n";
         }
         reultTextArea.setText(text);
     }
