@@ -26,7 +26,7 @@ public class YbAutoUtil extends JFrame {
     //出参文本框
     private static JTextArea reultTextArea = null;
     //
-    private static String[] fileTypeEnum = {"1.schema文件", "2.mapping文件", "3.建表sql语句", "4.Js入参", "5.Js出参" };
+    private static String[] fileTypeEnum = {"1.schema文件", "2.mapping文件", "3.建表sql语句", "4.Js入参", "5.Js出参" ,"6.Dic文件" };
 
     public YbAutoUtil() {
         JFrame utilFrame = new JFrame();
@@ -113,6 +113,8 @@ public class YbAutoUtil extends JFrame {
                             buildInput(rows_list);
                         } else if ("5.Js出参".equals(fileType.getSelectedItem().toString())) {
                             buildOutput(rows_list);
+                        } else if ("6.Dic文件".equals(fileType.getSelectedItem().toString())) {
+                            buildDictionary(rows_list);
                         }
                     }
                 } catch (Exception e1) {
@@ -290,4 +292,21 @@ public class YbAutoUtil extends JFrame {
         reultTextArea.setText(text);
     }
 
+    //Dic生成
+    public void buildDictionary(java.util.List<java.util.List<String>> rows_list)throws PinyinException {
+        java.util.List<String> text_rows = new ArrayList<String>();
+        ArrayList<Map<String , Object>>con_list = ExcelFileReader.getExcelContent(rows_list);
+        Iterator<Map<String , Object>>it = con_list.iterator();
+        while(it.hasNext()){
+            String str = "";
+            Map<String , Object>con_map = it.next();
+            str += "<item key = \""+con_map.get("index").toString().split("\\.")[0]+"\""+" text = \""+(con_map.containsKey("name4Js")?con_map.get("name4Js").toString():"")+"\" />\r\n";
+            text_rows.add(str);
+        }
+        reultTextArea.setText("");
+        String text="";
+        for(int i=0 ; i<text_rows.size() ; i++)
+            text += text_rows.get(i);
+        reultTextArea.setText(text);
+    }
 }

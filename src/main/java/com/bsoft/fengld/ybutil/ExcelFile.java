@@ -12,6 +12,7 @@ public class ExcelFile
     private static int alias_index = 2;     //字段别名
     private static int remark_index = 4;    //备注
     private static int name_index = alias_index;    //我方字段名，自动中文转拼音首字母大写
+    private static int index = 0; //字典用Key
 
 
 
@@ -68,4 +69,7 @@ public class ExcelFile
         ExcelFile.name_index4Js = name_index4self;
     }
 
+    public static int getIndex() {  return index; }
+
+    public static void setType_index(int type_index) { ExcelFile.type_index = type_index; }
 }

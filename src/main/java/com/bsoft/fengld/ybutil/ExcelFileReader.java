@@ -24,6 +24,7 @@ public class ExcelFileReader {
     private static final int alias_index = ExcelFile.getAlias_index();
     private static final int remark_index = ExcelFile.getRemark_index();
     private static final int name_index4Js = ExcelFile.getName_index4Js();
+    private static final int index = ExcelFile.getIndex();
 
     public static int getName_index() {
         return name_index;
@@ -48,6 +49,8 @@ public class ExcelFileReader {
     public static int getName_index4Js() {
         return name_index4Js;
     }
+
+    public static int getIndex() {return index;}
 
     public static boolean readerExcel(String path, java.util.List<java.util.List<String>> rows_list) throws Exception {
         File file = new File(path);
@@ -105,6 +108,8 @@ public class ExcelFileReader {
                     content_map.put("remark" , rows_list.get(i).get(remark_index));
                 if(j == name_index4Js)
                     content_map.put("name4Js" , rows_list.get(i).get(name_index4Js));
+                if(j == index)
+                    content_map.put("index" , rows_list.get(i).get(index));
             }
             content_list.add(content_map);
         }
