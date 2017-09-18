@@ -171,7 +171,7 @@ public class YbAutoUtil extends JFrame {
                     continue;
                 if(entry.getKey().equals("name"))
                     str += " id=\""+entry.getValue()+"\"";
-                else
+                else if(!entry.getKey().equals("index"))
                     str += " " +entry.getKey()+"=\""+entry.getValue()+"\"";
             }
             if(!con_map.containsKey("type"))
@@ -216,7 +216,7 @@ public class YbAutoUtil extends JFrame {
                         type = "type= \"" + type.toLowerCase()+"\" ";
                     str += type;
                 }
-                else
+                else if(!entry.getKey().equals("index"))
                     str += " " +entry.getKey()+"=\""+entry.getValue()+"\" ";
             }
             str +="/>";
@@ -238,20 +238,50 @@ public class YbAutoUtil extends JFrame {
 
     //生成对应的sql建表语句
     public void buildSql(java.util.List<java.util.List<String>> rows_list) throws PinyinException {
+        String tableName = "";
         Map<String, Object> sql = new HashMap<String, Object>();
         java.util.List<String> text_rows = new ArrayList<String>();
         java.util.List<String> com_rows = new ArrayList<String>();
-        ArrayList<Map<String , Object>>con_list = ExcelFileReader.getExcelContent(rows_list);
-        Iterator<Map<String , Object>>it = con_list.iterator();
-        while(it.hasNext()){
-            Map<String , Object>con_map = it.next();
-            String str = "insert into "+fileName.toUpperCase().split("\\.")[0]+" （YBKSBM , YBKSMC) values('"+con_map.get("name4Js").toString().split("\\.")[0]+"' , '"+con_map.get("alias").toString()+"') ;";
-            text_rows.add(str);
+        for (int i = 0; i < rows_list.size(); i++) {            //每一行
+            String row_str = "";
+            String com_str = "";
+            for (int j = 0; j < rows_list.get(i).size(); j++) {            //每一列（每个单元格）
+//                if (j == ExcelFileReader.getName_index()) {  //参数名
+//                    //暂不处理
+//                } else
+                    if (j == ExcelFileReader.getType_index()) {    //字段类型
+                    String type = rows_list.get(i).get(j).trim();
+//                        System.out.println(type);
+                    if (type.toLowerCase().equals("varchar2") || type.toLowerCase().equals("string")) {
+                        sql.put("type", "VARCHAR2(");
+                    } else if (type.toLowerCase().equals("number")) {
+                        sql.put("type", "NUMBER(");
+                    } else {
+                        sql.put("type", type.toLowerCase() + "(");
+                    }
+                } else if (j == ExcelFileReader.getLength_index()) {        //长度
+                    sql.put("length", rows_list.get(i).get(j).split("\\.")[0].toString().trim() + ")");
+                } else if (j == ExcelFileReader.getAlias_index()) {        //字段名
+                    sql.put("colName", PinyinHelper.getShortPinyin(rows_list.get(i).get(j)).toUpperCase());
+                    sql.put("colComments", rows_list.get(i).get(j));
+                }
+            }
+            row_str += sql.get("colName").toString() + " " + sql.get("type").toString() + sql.get("length").toString();
+            if (i < rows_list.size() - 1)
+                row_str += ",";
+            com_str += "comment on column " + fileName.toUpperCase().split("\\.")[0] + "." + sql.get("colName") + "\r\n" + "is '" + sql.get("colComments") + "' ;\r\n";
+            text_rows.add(row_str);
+            com_rows.add(com_str);
         }
         reultTextArea.setText("");
-        String text ="";
+        String text = "--create table with given colname you'd better add index and key by yourself\r\n--只生成列，主键等自己加\r\n"
+                + "create table  " + fileName.toUpperCase().split("\\.")[0] + "\r\n" + "(" + "\r\n";
         for (int i = 0; i < text_rows.size(); i++) {
             text += text_rows.get(i) + "\r\n";
+        }
+        text += ")\r\n;\r\n--Add comments to the columns \r\n";
+        for (int i = 0; i < com_rows.size(); i++) {
+            text += com_rows.get(i) + "\r\n";
         }
         reultTextArea.setText(text);
     }
@@ -264,7 +294,7 @@ public class YbAutoUtil extends JFrame {
         while(it.hasNext()){
             String str = "request.";
             Map<String , Object>con_map = it.next();
-            str += con_map.get("name4Js").toString()+"=   ;//"+(con_map.containsKey("remark")?con_map.get("remark").toString():"")+"\r\n";
+            str += con_map.get("name4Js").toString()+"=  "+PinyinHelper.getShortPinyin(con_map.get("alias").toString()).toUpperCase()+" ;//"+(con_map.containsKey("alias")?con_map.get("alias").toString():"")+"\r\n";
             text_rows.add(str);
         }
         reultTextArea.setText("");
@@ -282,7 +312,7 @@ public class YbAutoUtil extends JFrame {
         while(it.hasNext()){
             String str = "this.XXXX[\"";
             Map<String , Object>con_map = it.next();
-            str += PinyinHelper.getShortPinyin(con_map.get("alias").toString()).toUpperCase()+"\"]= "+"ret."+con_map.get("name4Js")+" //"+(con_map.containsKey("remark")?con_map.get("remark").toString():"")+"\r\n";
+            str += PinyinHelper.getShortPinyin(con_map.get("alias").toString()).toUpperCase()+"\"]= "+"ret."+con_map.get("name4Js")+" //"+(con_map.containsKey("alias")?con_map.get("alias").toString():"")+"\r\n";
             text_rows.add(str);
         }
         reultTextArea.setText("");

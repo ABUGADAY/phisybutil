@@ -6,11 +6,11 @@ package com.bsoft.fengld.ybutil;
  */
 public class ExcelFile
 {
-    private static int name_index4Js = 1;   //Js中显示的对方接口的参数名
-    private static int type_index = 5;      //字段类型
-    private static int length_index = 3;    //字段长度
-    private static int alias_index = 2;     //字段别名
-    private static int remark_index = 4;    //备注
+    private static int name_index4Js = 0;   //Js中显示的对方接口的参数名
+    private static int type_index = 1;      //字段类型
+    private static int length_index = 2;    //字段长度
+    private static int alias_index = 4;     //字段别名
+    private static int remark_index = 5;    //备注
     private static int name_index = alias_index;    //我方字段名，自动中文转拼音首字母大写
     private static int index = 0; //字典用Key
 
